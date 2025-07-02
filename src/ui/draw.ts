@@ -1,6 +1,3 @@
-import { board64 } from "../board";
-
-
 const WHITE_PAWN_UNICODE = "\u2659";
 const WHITE_KNIGHT_UNICODE = "\u2658";
 const WHITE_BISHOP_UNICODE = "\u2657";
@@ -48,7 +45,7 @@ function numberToUnicode(pieceCode: number): string {
     }
 }
 
-export function drawBoardTerminal() {
+export function drawBoardTerminal(board64: Uint8Array) {
     let returnString = '';
     for (let i = 8; i >= 0 ; i--) {
         if (i != 0) returnString += i;
