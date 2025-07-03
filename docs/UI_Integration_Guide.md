@@ -1,26 +1,31 @@
-Developer Guide: Integrating the Chess Engine with a Chessground UI
+Of course. Here is the final, comprehensive guide. It is designed to be a complete, standalone document you can give directly to your frontend team. It includes the updated API, detailed integration steps, and a clear breakdown of their responsibilities.
 
-Version 3.0 (Final)
+---
+
+### **Developer Guide: Integrating the Chess Engine with a Chessground UI**
+
+**Version 3.0 (Final)**
 
 This document provides everything you need to build a full-featured chess UI using our backend engine and the Chessground library.
 
-1. The API: Your Toolkit
+#### **1. The API: Your Toolkit**
 
-You will only interact with the backend through the engine object. This is your single point of entry. It provides all the data you need in a single, convenient package called the UIGameState.
+You will only interact with the backend through the `engine` object. This is your single point of entry. It provides all the data you need in a single, convenient package called the `UIGameState`.
 
-API Methods:
+**API Methods:**
 
-Method	Description
-engine.startNewGame()	Starts a new game.
-engine.getGameState()	Gets the current state.
-engine.makeMove(from, to, promotion?)	Makes a move. Returns null if illegal.
-engine.undoMove()	Undoes the last move.
+| Method                                       | Description                                       |
+| -------------------------------------------- | ------------------------------------------------- |
+| `engine.startNewGame()`                      | Starts a new game.                                |
+| `engine.getGameState()`                      | Gets the current state.                           |
+| `engine.makeMove(from, to, promotion?)`      | Makes a move. Returns `null` if illegal.          |
+| `engine.undoMove()`                          | Undoes the last move.                             |
 
-The UIGameState Object:
+**The `UIGameState` Object:**
 
 Every API call returns this object. It is designed to give you everything you need to render the entire UI.
 
-Generated typescript
+```typescript
 interface UIGameState {
   // --- Core Board State ---
   fen: string;                      // For setting the board position
@@ -42,14 +47,18 @@ interface UIGameState {
     black: { p: number, n: number, b: number, r: number, q: number }
   };
 }
+```
 
-2. Integration Guide: Connecting the Engine to the UI
+---
+
+#### **2. Integration Guide: Connecting the Engine to the UI**
 
 This guide provides the logic patterns for connecting the engine. You will need to adapt these patterns to your specific frontend framework and component structure.
 
+##### **Step 1: Setup & Initialization**
 Set up your Chessground instance using the initial state from the engine.
 
-Generated typescript
+```typescript
 // Import necessary modules
 import { Chessground } from 'chessground';
 import { Api as ChessgroundApi } from 'chessground/api';
@@ -83,22 +92,15 @@ const board: ChessgroundApi = Chessground(boardElement, {
 
 // Initial UI render
 updateUi(initialState);
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-TypeScript
-IGNORE_WHEN_COPYING_END
+```
 
+##### **Step 2: The Core Logic Loop**
 All your button clicks and move events will follow this simple pattern:
+1.  Call the appropriate `engine` method.
+2.  Receive the new `UIGameState`.
+3.  Pass that state to a single `updateUi` helper function.
 
-Call the appropriate engine method.
-
-Receive the new UIGameState.
-
-Pass that state to a single updateUi helper function.
-
-Generated typescript
+```typescript
 // --- Event Handlers ---
 
 function handleUserMove(from: Key, to: Key) {
@@ -122,16 +124,12 @@ document.getElementById('undo-btn').addEventListener('click', () => {
   const newState = engine.undoMove();
   updateUi(newState);
 });
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-TypeScript
-IGNORE_WHEN_COPYING_END
+```
 
-Create a central function that takes the UIGameState and updates all parts of your UI. This keeps your code organized and easy to maintain.
+##### **Step 3: The `updateUi` Helper Function**
+Create a central function that takes the `UIGameState` and updates all parts of your UI. This keeps your code organized and easy to maintain.
 
-Generated typescript
+```typescript
 /**
  * A central function to update the entire UI with a new state from our engine.
  */
@@ -157,58 +155,38 @@ function updateUi(state: UIGameState): void {
   // 4. Update the game status message
   renderGameStatus(state);
 }
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-TypeScript
-IGNORE_WHEN_COPYING_END
+```
+---
 <br>
 
-Frontend Team's Responsibilities (What You Still Need to Build)
+### **Frontend Team's Responsibilities (What You Still Need to Build)**
 
-Our engine handles the chess rules. Your job is to build the user experience. The guide above provides the blueprint for connecting our systems, but you are responsible for building the house itself.
+Our engine handles the chess *rules*. Your job is to build the user *experience*. The guide above provides the blueprint for connecting our systems, but you are responsible for building the house itself.
 
-Your Core Tasks:
+**Your Core Tasks:**
 
-HTML Structure & CSS Styling:
+1.  **HTML Structure & CSS Styling:**
+    *   Create the actual HTML for the board container, buttons, sidebars, and information panels.
+    *   Write all the CSS to create a beautiful, responsive, and modern layout.
 
-Create the actual HTML for the board container, buttons, sidebars, and information panels.
+2.  **Framework Integration (React, Vue, Svelte, etc.):**
+    *   Adapt the provided logic patterns into your chosen framework.
+    *   This includes managing state (e.g., with `useState` or a store), handling component lifecycles (`useEffect`), and creating reusable UI components.
 
-Write all the CSS to create a beautiful, responsive, and modern layout.
+3.  **Implement the Pawn Promotion UI:**
+    *   This is a crucial frontend-only task.
+    *   Your code must detect when a user moves a pawn to the final rank.
+    *   You must then prevent the `engine.makeMove` call and instead display a UI element (e.g., a modal dialog) asking the user to choose a promotion piece.
+    *   Finally, you will call `engine.makeMove(from, to, userChoice)` with their selection.
 
-Framework Integration (React, Vue, Svelte, etc.):
+4.  **Build UI Feature Components:**
+    *   The guide provides simple, non-production examples of render functions. You need to build robust, well-styled components for these features.
+    *   **Move History:** Create a scrollable list of moves.
+    *   **Captured Pieces:** Design a clean display for pieces captured by each player.
+    *   **Game Status:** Replace `alert()`s with a professional game-over modal or an elegant message display.
 
-Adapt the provided logic patterns into your chosen framework.
-
-This includes managing state (e.g., with useState or a store), handling component lifecycles (useEffect), and creating reusable UI components.
-
-Implement the Pawn Promotion UI:
-
-This is a crucial frontend-only task.
-
-Your code must detect when a user moves a pawn to the final rank.
-
-You must then prevent the engine.makeMove call and instead display a UI element (e.g., a modal dialog) asking the user to choose a promotion piece.
-
-Finally, you will call engine.makeMove(from, to, userChoice) with their selection.
-
-Build UI Feature Components:
-
-The guide provides simple, non-production examples of render functions. You need to build robust, well-styled components for these features.
-
-Move History: Create a scrollable list of moves.
-
-Captured Pieces: Design a clean display for pieces captured by each player.
-
-Game Status: Replace alert()s with a professional game-over modal or an elegant message display.
-
-Implement Additional UX Features:
-
-A "Flip Board" button.
-
-Player clocks/timers.
-
-A display showing whose turn it is.
-
-Visual feedback for illegal moves (beyond the default snap-back).
+5.  **Implement Additional UX Features:**
+    *   A "Flip Board" button.
+    *   Player clocks/timers.
+    *   A display showing whose turn it is.
+    *   Visual feedback for illegal moves (beyond the default snap-back).
