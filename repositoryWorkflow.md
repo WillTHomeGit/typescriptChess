@@ -36,13 +36,12 @@ You need to tell your local copy where the original project is so you can keep i
 
 1.  Navigate into your newly cloned project directory:
     ```sh
-    cd project-name
+    cd typescriptChess
     ```
 2.  Add a remote for the original project:
     ```sh
-    git remote add upstream https://github.com/my-original-username/project-name.git
+    git remote add upstream https://github.com/WillTHomeGit/typescriptChess.git
     ```
-    *(Replace `my-original-username` with the actual owner of the main repository).*
 
 ---
 
