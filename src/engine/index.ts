@@ -88,6 +88,28 @@ class EngineService implements ChessEngineAPI {
     }
 
     /**
+     * Handles the "Undo" action from the UI.
+     * It reverts the last move made in the game and returns the updated UI state.
+     * If no moves have been made, it does nothing and returns the current state.
+     * @returns {UIGameState} The game state after the undo operation.
+     * @added
+     */
+    public undoMove(): UIGameState {
+        // 1. Check if there is a move to undo.
+        if (this.game.moveHistory.length > 0) {
+            // 2. Get the last move's history object to pass to the core undo function.
+            // Your undoMove function in Game.ts requires the history object.
+            const lastMoveHistory = this.game.moveHistory[this.game.moveHistory.length - 1];
+
+            // 3. Delegate the complex task of undoing the move to the `Game` class.
+            this.game.undoMove(lastMoveHistory);
+        }
+
+        // 4. Return the newly updated (or unchanged) state for the UI to render.
+        return createUIGameState(this.game);
+    }
+
+    /**
      * Retrieves the complete, current state of the game in a UI-friendly format.
      * @returns {UIGameState} The current game state, ready for the UI to consume.
      */

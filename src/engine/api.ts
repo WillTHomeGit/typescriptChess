@@ -12,8 +12,26 @@ export interface UIGameState {
    */
   dests: Map<string, string[]>;
   isCheck: boolean;
+  isCheckmate: boolean;
+  isStalemate: boolean;
+  isDraw50Move: boolean;
   isGameOver: boolean;
   lastMove?: { from: string; to: string };
+
+  /**
+   * A list of all moves made in the game, in algebraic notation.
+   * @added
+   */
+  history: { from: string, to: string, promotion?: string }[];
+
+  /**
+   * A map of piece types to the number of pieces captured for each color.
+   * @added
+   */
+  capturedPieces: {
+    white: { p: number, n: number, b: number, r: number, q: number },
+    black: { p: number, n: number, b: number, r: number, q: number }
+  };
 }
 
 /**
@@ -33,4 +51,11 @@ export interface ChessEngineAPI {
 
   /** Starts a new game and returns the initial UIGameState. */
   startNewGame(): UIGameState;
+
+  /**
+   * Undoes the last move and returns the new UIGameState.
+   * If there are no moves to undo, it returns the current state without changes.
+   * @added
+   */
+  undoMove(): UIGameState;
 }

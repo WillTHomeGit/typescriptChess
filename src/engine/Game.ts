@@ -31,6 +31,9 @@ import {
     MoveHistory,
     createInitialGameState
 } from './types';
+import { 
+    squareToIndex 
+} from './utils';
 
 
 export class Game {
@@ -281,6 +284,88 @@ export class Game {
         return undefined; // No legal move found
     }
 
+        /**
+     * Sets the game state from a Forsyth-Edwards Notation (FEN) string.
+     * This completely overwrites the current game state.
+     * @param fen The FEN string representing the position.
+     */
+    public loadFen(fen: string): void {
+        // A mapping from FEN characters to our internal piece codes.
+        const fenCharToPieceCode: { [key: string]: number } = {
+            'p': makePiece(PAWN, BLACK),   'P': makePiece(PAWN, WHITE),
+            'n': makePiece(KNIGHT, BLACK), 'N': makePiece(KNIGHT, WHITE),
+            'b': makePiece(BISHOP, BLACK), 'B': makePiece(BISHOP, WHITE),
+            'r': makePiece(ROOK, BLACK),   'R': makePiece(ROOK, WHITE),
+            'q': makePiece(QUEEN, BLACK),  'Q': makePiece(QUEEN, WHITE),
+            'k': makePiece(KING, BLACK),   'K': makePiece(KING, WHITE),
+        };
+
+        const parts = fen.split(' ');
+        const piecePlacement = parts[0];
+        const activeColor = parts[1];
+        const castlingRightsStr = parts[2];
+        const enPassantTarget = parts[3];
+        const halfmoveClock = parts[4];
+        const fullmoveNumber = parts[5];
+
+        // 1. Reset Board and All State
+        // completely reset your pieceList so initializePieceListFromBoard()
+        // always starts from empty
+        this.pieceList = createPieceList();
+        this.board.fill(EMPTY);
+        this.moveHistory.length = 0;
+        
+        // 2. Parse Piece Placement
+        let rank = 7; // FEN starts from rank 8
+        let file = 0; // and file 'a'
+        for (const char of piecePlacement) {
+            if (char === '/') {
+                rank--;
+                file = 0;
+            } else if (/\d/.test(char)) {
+                file += parseInt(char, 10);
+            } else {
+                const square = rank * 8 + file;
+                const piece = fenCharToPieceCode[char];
+                if (piece) {
+                    this.board[square] = piece;
+                    
+                    // Keep track of king squares as we find them
+                    if (getPieceType(piece) === KING) {
+                        this.gameState.kingSquare[getPieceColor(piece)] = square;
+                    }
+                }
+                file++;
+            }
+        }
+
+        // After the board is set up, initialize the pieceList from it.
+        initializePieceListFromBoard(this.pieceList, this.board);
+
+        // 3. Parse Active Color
+        this.gameState.sideToMove = (activeColor === 'w') ? WHITE : BLACK;
+
+        // 4. Parse Castling Rights
+        this.gameState.castlingRights = 0;
+        if (castlingRightsStr.includes('K')) this.gameState.castlingRights |= CASTLE_WHITE_KINGSIDE;
+        if (castlingRightsStr.includes('Q')) this.gameState.castlingRights |= CASTLE_WHITE_QUEENSIDE;
+        if (castlingRightsStr.includes('k')) this.gameState.castlingRights |= CASTLE_BLACK_KINGSIDE;
+        if (castlingRightsStr.includes('q')) this.gameState.castlingRights |= CASTLE_BLACK_QUEENSIDE;
+
+        // 5. Parse En Passant Target Square
+        if (enPassantTarget === '-') {
+            this.gameState.enPassantSquare = -1;
+        } else {
+            // The FEN en passant target is the square *behind* the pawn that moved.
+            // This is the square where the capturing pawn will land.
+            this.gameState.enPassantSquare = squareToIndex(enPassantTarget);
+        }
+
+        // 6. Parse Clocks
+        this.gameState.halfmoveClock = parseInt(halfmoveClock, 10) || 0;
+        this.gameState.fullmoveNumber = parseInt(fullmoveNumber, 10) || 1;
+    }
+
     // ===================================================================
     // PRIVATE HELPER METHODS
     // ===================================================================
@@ -493,7 +578,7 @@ export class Game {
                     moves.push({
                         from: square,
                         to: captureSquare64,
-                        flag: MOVE_ENPASSANT
+                        flag: MOVE_ENPASSANT | MOVE_CAPTURE
                     });
                 }
             }
@@ -579,7 +664,8 @@ export class Game {
                 if ((this.gameState.castlingRights & CASTLE_WHITE_KINGSIDE) &&
                     this.getPiece(SQUARES.F1) === EMPTY &&
                     this.getPiece(SQUARES.G1) === EMPTY &&
-                    !this.isSquareAttacked(SQUARES.F1, BLACK)) {
+                    !this.isSquareAttacked(SQUARES.F1, BLACK) &&
+                    !this.isSquareAttacked(SQUARES.G1, BLACK)) { // Added check for G1
                     moves.push({
                         from: square,
                         to: SQUARES.G1,
@@ -592,6 +678,7 @@ export class Game {
                     this.getPiece(SQUARES.B1) === EMPTY &&
                     this.getPiece(SQUARES.C1) === EMPTY &&
                     this.getPiece(SQUARES.D1) === EMPTY &&
+                    !this.isSquareAttacked(SQUARES.C1, BLACK) && // Added check for C1
                     !this.isSquareAttacked(SQUARES.D1, BLACK)) {
                     moves.push({
                         from: square,
@@ -604,7 +691,8 @@ export class Game {
                 if ((this.gameState.castlingRights & CASTLE_BLACK_KINGSIDE) &&
                     this.getPiece(SQUARES.F8) === EMPTY &&
                     this.getPiece(SQUARES.G8) === EMPTY &&
-                    !this.isSquareAttacked(SQUARES.F8, WHITE)) {
+                    !this.isSquareAttacked(SQUARES.F8, WHITE) &&
+                    !this.isSquareAttacked(SQUARES.G8, WHITE)) { // Added check for G8
                     moves.push({
                         from: square,
                         to: SQUARES.G8,
@@ -617,6 +705,7 @@ export class Game {
                     this.getPiece(SQUARES.B8) === EMPTY &&
                     this.getPiece(SQUARES.C8) === EMPTY &&
                     this.getPiece(SQUARES.D8) === EMPTY &&
+                    !this.isSquareAttacked(SQUARES.C8, WHITE) && // Added check for C8
                     !this.isSquareAttacked(SQUARES.D8, WHITE)) {
                     moves.push({
                         from: square,
@@ -628,5 +717,35 @@ export class Game {
         }
 
         return moves;
+    }
+
+    public isInCheck(color: 0|1): boolean {
+        const enemy = color === WHITE ? BLACK : WHITE;
+        return this.isSquareAttacked(this.gameState.kingSquare[color], enemy);
+    }
+
+    public hasLegalMoves(): boolean {
+        return this.generateMoves().length > 0;
+    }
+
+    public isCheckmate(): boolean {
+        const stm = this.gameState.sideToMove;
+        return this.isInCheck(stm) && !this.hasLegalMoves();
+    }
+
+    public isStalemate(): boolean {
+        const stm = this.gameState.sideToMove;
+        return !this.isInCheck(stm) && !this.hasLegalMoves();
+    }
+
+    public isFiftyMoveRule(): boolean {
+        // halfmoveClock counts half‐moves since last pawn move or capture
+        return this.gameState.halfmoveClock >= 100;
+    }
+
+    public isGameOver(): boolean {
+        return this.isCheckmate()
+            || this.isStalemate()
+            || this.isFiftyMoveRule();
     }
 }
