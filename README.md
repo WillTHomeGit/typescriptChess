@@ -30,11 +30,11 @@ You will need [Node.js](https://nodejs.org/) (which includes npm) installed on y
 
 1.  **Clone the repository:**
     ```sh
-    git clone https://github.com/your-username/your-project-name.git
+    git clone https://github.com/WillTHomeGit/typescriptChess.git
     ```
 2.  **Navigate to the project directory:**
     ```sh
-    cd your-project-name
+    cd typescriptChess
     ```
 3.  **Install development dependencies:**
     ```sh
