@@ -1,7 +1,3 @@
-Of course. Here is the final, comprehensive guide. It is designed to be a complete, standalone document you can give directly to your frontend team. It includes the updated API, detailed integration steps, and a clear breakdown of their responsibilities.
-
----
-
 ### **Developer Guide: Integrating the Chess Engine with a Chessground UI**
 
 **Version 3.0 (Final)**
